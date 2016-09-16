@@ -1,12 +1,31 @@
-import channelfinder
 from channelfinder import ChannelFinderClient
 import _conf
 import sqlite3
 import sys
 
 
-
 def main():
+    '''
+    ex = {u'name': u'V_1:LS1_CA01:CAV1_D1127:PHA_CSET',
+          u'owner': u'sql-to-cfs',
+          u'properties': [
+              {u'name': u'elemHandle', u'owner': u'sql-to-cfs', u'value': u'setpoint'},
+              {u'name': u'elemField', u'owner': u'sql-to-cfs', u'value': u'PHA'},
+              {u'name': u'elemName', u'owner': u'sql-to-cfs', u'value': u'LS_CA01:CAV1_D1127'},
+              {u'name': u'elemType', u'owner': u'sql-to-cfs', u'value': u'CAV'},
+              {u'name': u'elemLength', u'owner': u'sql-to-cfs', u'value': u'0.24'},
+              {u'name': u'elemPosition', u'owner': u'sql-to-cfs', u'value': u'0.4470635'},
+              {u'name': u'elemIndex', u'owner': u'sql-to-cfs', u'value': u'3'}
+          ],
+          u'tags': [
+              {u'name': u'phyutil.sub.CA01', u'owner': u'sql-to-cfs'},
+              {u'name': u'phyutil.sys.LINAC', u'owner': u'sql-to-cfs'},
+              {u'name': u'phyutil.sys.LS1', u'owner': u'sql-to-cfs'}
+          ]}
+    '''
+    cf = {}
+    tags = {}
+    props = {}
     conf = _conf._testConf
     BaseURL = conf.get('DEFAULT', 'BaseURL')
     username = conf.get('DEFAULT', 'username')
@@ -23,8 +42,6 @@ def main():
     pv_whitelist = ['pv', 'elemHandle', 'elemField', 'tags']
     elems_whitelist = ['elemName', 'elemType', 'elemLength', 'elemPosition', 'elemIndex']
 
-    # could create all properties/tags here to speed up process
-
     for e_pv_id in c.execute('SELECT * from elements__pvs'):
         ch_name = None
         elem_id = (e_pv_id[1],)
@@ -34,62 +51,43 @@ def main():
             if pv_columns[i][1] in pv_whitelist:
                 if pv_columns[i][1] == 'pv':
                     ch_name = pv[i]
-                    create_channel(client, ch_name)
+                    add_channel_to_cf(cf, ch_name)
                 elif pv_columns[i][1] == 'tags':
-                    add_tags(client, ch_name, pv[i])
+                    add_tags_to_ch(cf, tags, ch_name, pv[i])
                 else:
-                    add_property(client, ch_name, pv_columns[i][1], pv[i])
+                    add_prop_to_ch(cf, props, ch_name, pv_columns[i][1], pv[i])
         elems = conn.cursor().execute('SELECT * from elements where elem_id =?', elem_id).fetchone()
         for i in range(1, len(elems)):
             if elems_columns[i][1] in elems_whitelist:
-                add_property(client, ch_name, elems_columns[i][1], elems[i])
+                add_prop_to_ch(cf, props, ch_name, elems_columns[i][1], elems[i])
 
-    ex = {u'name': u'V_1:LS1_CA01:CAV1_D1127:PHA_CSET',
-          u'owner': u'sql-to-cfs',
-          u'properties': [
-              {u'name': u'elemHandle', u'owner': u'sql-to-cfs', u'value': u'setpoint'},
-              {u'name': u'elemField', u'owner': u'sql-to-cfs', u'value': u'PHA'},
-              {u'name': u'elemName', u'owner': u'sql-to-cfs', u'value': u'LS_CA01:CAV1_D1127'},
-              {u'name': u'elemType', u'owner': u'sql-to-cfs', u'value': u'CAV'},
-              {u'name': u'elemLength', u'owner': u'sql-to-cfs', u'value': u'0.24'},
-              {u'name': u'elemPosition', u'owner': u'sql-to-cfs', u'value': u'0.4470635'},
-              {u'name': u'elemIndex', u'owner': u'sql-to-cfs', u'value': u'3'}
-          ],
-          u'tags': [
-              {u'name': u'phyutil.sub.CA01', u'owner': u'sql-to-cfs'},
-              {u'name': u'phyutil.sys.LINAC', u'owner': u'sql-to-cfs'},
-              {u'name': u'phyutil.sys.LS1', u'owner': u'sql-to-cfs'}
-          ]
-         }
+    # print tags.values()
+    client.set(tags=tags.values())
+    # print props.values()
+    client.set(properties=props.values())
+    # print cf.values()
+    client.set(channels=cf.values())
 
 
-def create_channel(client, ch_name):
-    print "create channel: ", ch_name
-    if not client.find(name=ch_name):
-        client.set(channel={u'name': ch_name, u'owner': u'sql-to-cfs'})
+def add_channel_to_cf(cf, ch_name):
+    # print "Add ", ch_name, " to cf"
+    if ch_name not in cf:
+        cf[ch_name] = {u'name': ch_name, u'owner': u'sql-to-cfs', u'properties': [], u'tags': []}
 
 
-def add_tags(client, ch_name, tag_list):
-    if client.find(name=ch_name):
-        for tag_name in str.split(str(tag_list), ';'):
-            if not client.findTag(tag_name):
-                #print "create tag: ", tag_name
-                client.set(tag={u'name': tag_name, u'owner': u'sql-to-cfs'})
-            #print "add tag: ", tag_name, " to ", ch_name
-            client.update(channelName=ch_name, tag={u'name': tag_name, u'owner': u'sql-to-cfs'})
-    else:
-        print "CH NOT FOUND: ", ch_name
+def add_tags_to_ch(cf, tags, ch_name, tag_string):
+    # print "Add ", tag_string, " to ", ch_name, " in cf"
+    for tag_name in str.split(str(tag_string), ';'):
+        if tag_name not in tags:
+            tags[tag_name] = {u'name': tag_name, u'owner': u'sql-to-cfs'}
+        cf[ch_name][u'tags'].append({u'name': tag_name, u'owner': u'sql-to-cfs'})
 
 
-def add_property(client, ch_name, prop_name, prop_value):
-    if client.find(name=ch_name):
-        if not client.findProperty(prop_name):
-            #print "create property: ", prop_name
-            client.set(property={u'name': prop_name, u'owner': u'sql-to-cfs'})
-        #print "add property: ", prop_name, " with value: ", prop_value, " to ", ch_name
-        client.update(channelName=ch_name, property={u'name': prop_name, u'owner': u'sql-to-cfs', u'value': prop_value})
-    else:
-        print "CH NOT FOUND: ", ch_name
+def add_prop_to_ch(cf, props, ch_name, prop_name, prop_val):
+    # print "Add ", prop_name, " to ", ch_name, " with value: ", prop_val, " in cf"
+    if prop_name not in props:
+        props[prop_name] = {u'name': prop_name, u'owner': u'sql-to-cfs'}
+    cf[ch_name][u'properties'].append({u'name': prop_name, u'owner': u'sql-to-cfs', u'value': prop_val})
 
 
 if __name__ == "__main__":
