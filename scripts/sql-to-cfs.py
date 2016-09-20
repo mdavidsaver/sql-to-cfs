@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from channelfinder import ChannelFinderClient
 import _conf
 import sqlite3
