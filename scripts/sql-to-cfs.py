@@ -3,7 +3,7 @@ from channelfinder import ChannelFinderClient
 import _conf
 import sqlite3
 import sys
-
+import os
 
 def main():
     '''
@@ -97,4 +97,10 @@ def add_prop_to_ch(cf, props, ch_name, prop_name, prop_val):
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 2:
+        if os.path.isfile(sys.argv[1]):
+            main()
+        else:
+            print "Bad argument"
+    else:
+        print "Script requires file argument to run"
