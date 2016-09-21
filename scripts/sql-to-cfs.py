@@ -7,6 +7,11 @@ import sys
 
 def main():
     '''
+    Accepts a filename as an argument on the command line. The file should be an SQLite Database in the same format
+    as the test_db.sqlite example file. This program will submit to the Python ChannelFinder Client all of the fields
+    whitelisted below in the following format in a single batch request, after first creating all of their
+    tags and properties:
+
     ex = {u'name': u'V_1:LS1_CA01:CAV1_D1127:PHA_CSET',
           u'owner': u'sql-to-cfs',
           u'properties': [
