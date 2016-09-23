@@ -26,7 +26,6 @@ class Test_sql_to_cfs(unittest.TestCase):
         for pv in c.execute('SELECT * from pvs'):
             self.assertFalse(self.client.find(name=pv[1]))
 
-
     def tearDown(self):
         c = self.conn.cursor()
         # Remove all channels for test clean up

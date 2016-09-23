@@ -5,6 +5,7 @@ import sqlite3
 import sys
 import os
 
+
 def main():
     '''
     Accepts a filename as an argument on the command line. The file should be an SQLite Database in the same format
@@ -39,6 +40,7 @@ def main():
     client = ChannelFinderClient(BaseURL=BaseURL, username=username, password=password)
 
     db = sys.argv[1]
+    # os.chdir(os.path.dirname(__file__))
     conn = sqlite3.connect(db)
     c = conn.cursor()
 
