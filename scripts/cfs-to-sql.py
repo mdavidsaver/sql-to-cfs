@@ -67,8 +67,8 @@ def main():
     elems_columns = c.execute('PRAGMA table_info(elements);').fetchall()
 
     for ch in client.find(name='*'):
-        new_pv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        new_elem = [0, 0, 0, 0, 0, 0, 0, 0]
+        new_pv = [0, 0, 0, None, None, None, 0, None, None, None, None, None, 0, 0, 0.0]
+        new_elem = [0, 0, 0, 0, 0, None, None, 0]
         tag_string = ""
         new_pv[0] = ch['name'].encode('ascii', 'ignore')
         for tag in ch['tags']:
@@ -94,15 +94,15 @@ def main():
                 new_elem[3] = prop['value'].encode('ascii', 'ignore')
             if prop['name'] == 'elemIndex':
                 new_elem[4] = prop['value'].encode('ascii', 'ignore')
-        pv = c.execute('SELECT * FROM pvs WHERE pv =?', (new_pv[0],)).fetchall()
+        pv = c.execute('SELECT * FROM pvs WHERE pv =(?);', (new_pv[0],)).fetchall()
         if not pv:
-            c.execute('INSERT INTO pvs(pv, elemHandle, elemField, hostName, devName, iocName, tags, speed, hlaHigh, hlaLow, hlaStepsize, hlaValRef, archive, size, epsilon) VALUES ' + str(tuple(new_pv)) + ';')
+            c.execute('INSERT INTO pvs(pv, elemHandle, elemField, hostName, devName, iocName, tags, speed, hlaHigh, hlaLow, hlaStepsize, hlaValRef, archive, size, epsilon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', tuple(new_pv))
             pv_id = c.lastrowid
         else:  # pv exists
             pv_id = pv[0][0]
-        elem = c.execute('SELECT * FROM elements WHERE elemName =?', (new_elem[0],)).fetchall()
+        elem = c.execute('SELECT * FROM elements WHERE elemName =(?);', (new_elem[0],)).fetchall()
         if not elem:
-            c.execute('INSERT INTO elements(elemName, elemType, elemLength, elemPosition, elemIndex, elemGroups, fieldPolar, virtual) VALUES ' + str(tuple(new_elem)) + ';')
+            c.execute('INSERT INTO elements(elemName, elemType, elemLength, elemPosition, elemIndex, elemGroups, fieldPolar, virtual) VALUES (?, ?, ?, ?, ?, ?, ?, ?);', tuple(new_elem))
             elem_id = c.lastrowid
         else:  # elem exists
             elem_id = elem[0][0]
