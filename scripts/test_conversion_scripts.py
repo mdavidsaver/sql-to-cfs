@@ -28,8 +28,9 @@ class Test_sql_to_cfs(unittest.TestCase):
 
     def tearDown(self):
         '''
-        Note: Not removing tags or properties because it would destroy existing data. Possible workaround:
-        Sufficiently unique names on test channels, tags, and properties.
+        Note: This does not remove tags or properties because that would destroy existing data. Possible workaround:
+        Sufficiently unique names on all test channels, tags, and properties such that they would not likely exist
+        in real data.
         '''
         c = self.conn.cursor()
         # Remove all channels for test clean up
