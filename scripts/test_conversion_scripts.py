@@ -27,6 +27,10 @@ class Test_sql_to_cfs(unittest.TestCase):
             self.assertFalse(self.client.find(name=pv[1]))
 
     def tearDown(self):
+        '''
+        Note: Not removing tags or properties because it would destroy existing data. Possible workaround:
+        Sufficiently unique names on test channels, tags, and properties.
+        '''
         c = self.conn.cursor()
         # Remove all channels for test clean up
         for pv in c.execute('SELECT * from pvs'):
@@ -39,6 +43,12 @@ class Test_sql_to_cfs(unittest.TestCase):
             os.remove('../db/_test_output.sqlite')
 
     def test_cli(self):
+        '''
+        1. Converts existing test_db.sqlite database into existing CFS using sql-to-cfs.
+        2. Asserts that the new channel names exist.
+        3. Converts all channels in CF into new _test_output.sqlite database using cfs-to-sql.
+        4. Iterates through test_db.sqlite and asserts that all data was migrated to _test_output.sqlite.
+        '''
         os.chdir(os.path.dirname(__file__))
         # Run script
         subprocess.call(['./sql-to-cfs.py', '../db/test_db.sqlite'])

@@ -8,10 +8,9 @@ import os
 
 def main():
     '''
-    Accepts a filename as an argument on the command line. The file should be an SQLite Database in the same format
-    as the test_db.sqlite example file. This program will submit to the Python ChannelFinder Client all of the fields
-    whitelisted below in the following format in a single batch request, after first creating all of their
-    tags and properties:
+    Accepts a filename as an argument on the command line. The filename is used as the output location for the data,
+    if the file is an sqlite database it will connect, create the appropriate tables, and populate it with the data.
+    It will create a new file if one does not exist at the location:
 
     ex = {u'name': u'V_1:LS1_CA01:CAV1_D1127:PHA_CSET',
           u'owner': u'sql-to-cfs',
@@ -32,9 +31,9 @@ def main():
 
           to
 
-          insert into pvs values (1, 'V_1:LS1_CA01:CAV1_D1127:PHA_CSET', 'setpoint', 'PHA', 0, 0, 0, 'phyutil.sub.CA01;phyutil.sys.LINAC;phyutil.sys.LS1', 0, 0, 0, 0, 0, 0, 0, 0)
-          insert into elements values (1, 'LS_CA01:CAV1_D1127', 'CAV', 0.24, 0.4470635, 3, 0, 0, 0)
-          insert into elem_pvs values (1, 1, 1)
+    insert into pvs values (1, 'V_1:LS1_CA01:CAV1_D1127:PHA_CSET', 'setpoint', 'PHA', 0, 0, 0, 'phyutil.sub.CA01;phyutil.sys.LINAC;phyutil.sys.LS1', 0, 0, 0, 0, 0, 0, 0, 0)
+    insert into elements values (1, 'LS_CA01:CAV1_D1127', 'CAV', 0.24, 0.4470635, 3, 0, 0, 0)
+    insert into elem_pvs values (1, 1, 1)
     '''
     cf = {}
     tags = {}
